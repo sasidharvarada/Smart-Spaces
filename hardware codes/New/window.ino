@@ -57,6 +57,7 @@ void wifi_init() {
     Serial.println("\nConnected to the WiFi network");
     Serial.print("Local ESP32 IP: ");
     Serial.println(WiFi.localIP());
+    rssi = WiFi.RSSI();
 }
 
 bool isDataReceived = false;
