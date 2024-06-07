@@ -207,7 +207,6 @@ void loop() {
             stayLOW();
             post_onem2m();
         } else {
-            Act = "NC";
             Serial.println("No change detected!!");
             post_onem2m();
         }
