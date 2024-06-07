@@ -120,6 +120,7 @@ void switchON() {
 }
 
 void post_onem2m() {
+    String data  = "[" + String(Act) + "," + String(rssi) +"]";
     String server = "http://" + String(CSE_IP) + ":" + String(CSE_PORT) + String(OM2M_MN);
 
     http.begin(client, server + OM2M_AE + "/" + OM2M_DATA_CONT);
@@ -127,7 +128,7 @@ void post_onem2m() {
     http.addHeader("Content-Type", "application/json;ty=4");
 
     String req_data = String() + "{\"m2m:cin\": {"
-                    + "\"con\": \"" + Act + "\","
+                    + "\"con\": \"" + data + "\","
                     + "\"cnf\": \"text\""
                     + "}}";  
 
