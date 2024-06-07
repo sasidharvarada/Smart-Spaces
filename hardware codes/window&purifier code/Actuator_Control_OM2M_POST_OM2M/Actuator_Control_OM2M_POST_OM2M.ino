@@ -151,7 +151,7 @@ void post_onem2m() {
 
 void setup() {
 
-  Serial.begin(9600);
+  Serial.begin(115200);
   connect_to_WIFI();
   pinMode(relay1, OUTPUT);
   pinMode(relay2, OUTPUT);
