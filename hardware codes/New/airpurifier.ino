@@ -73,8 +73,8 @@ void data_receive(AsyncWebServerRequest *request, unsigned char *data, size_t le
     DeserializationError error = deserializeJson(doc, stri);
 
     if (error) {
-        Serial.print("deserializeJson() failed: ");
-        Serial.println(error.c_str());
+        // Serial.print("deserializeJson() failed: ");
+        // Serial.println(error.c_str());
         return;
     }
 
