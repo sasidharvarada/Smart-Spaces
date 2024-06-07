@@ -68,8 +68,8 @@ void data_receive(AsyncWebServerRequest *request, unsigned char *data, size_t le
     for (int i = 0; i < len; i++) {
         stri += (char)data[i];
     }
-    Serial.print(stri);
-    Serial.print("\n");
+    // Serial.print(stri);
+    // Serial.print("\n");
 
     DeserializationError error = deserializeJson(doc, stri);
 
@@ -85,7 +85,7 @@ void data_receive(AsyncWebServerRequest *request, unsigned char *data, size_t le
     conv_data = m2m_cin_con;
     Serial.print("DATA: ");
     Serial.println(conv_data);
-    Serial.println("======== oneM2M DATA PARSED! ==========");
+    // Serial.println("======== oneM2M DATA PARSED! ==========");
 
     // Use if the data required needs to be in the format of char*
     char *c = const_cast<char *>(conv_data.c_str());
@@ -100,10 +100,10 @@ void data_receive(AsyncWebServerRequest *request, unsigned char *data, size_t le
     airpurifier = conValue.substring(commaIndex + 1); // Update global variable
 
     // Print the extracted values without square brackets
-    Serial.print("window: ");
-    Serial.println(window);
-    Serial.print("airpurifier: ");
-    Serial.println(airpurifier);
+    // Serial.print("window: ");
+    // Serial.println(window);
+    // Serial.print("airpurifier: ");
+    // Serial.println(airpurifier);
 
     if (!conv_data.isEmpty()) {
         isDataReceived = true;
@@ -185,28 +185,29 @@ void loop() {
         buttonState = digitalRead(button);
 
         if (flag == 0 && (buttonState == 1 || window == "CLOSE")) {
-            clockWise();
-            delay(2000);
             Serial.println("Closing the window ......");
+            clockWise();
             flag = 1;
             window = "NC";
             buttonState = 0;
             Act = "CLOSE";
+            post_onem2m();
             delay(3000);
             stayLOW();
-            post_onem2m();
-
-        } else if (flag == 1 && (buttonState == 1 || window == "OPEN")) {
+        } 
+        else if (flag == 1 && (buttonState == 1 || window == "OPEN")) {
+            Serial.println("Opening the window......");
             antiClockWise();
             flag = 0;
             window = "NC";
             buttonState = 0;
-            Serial.println("Opening the window......");
+            Act = "OPEN";
+            post_onem2m();
             Act = "OPEN";
             delay(4500);
             stayLOW();
-            post_onem2m();
-        } else {
+        }
+        else {
             Serial.println("No change detected!!");
             post_onem2m();
         }
