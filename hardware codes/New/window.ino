@@ -33,6 +33,9 @@ String Act = "NC";
 WiFiClient client;
 HTTPClient http;
 
+unsigned long startTime;
+unsigned long duration;
+
 // WiFi credentials
 const char *ssid = "esw-m19@iiith";
 const char *password = "e5W-eMai@3!20hOct";
@@ -63,6 +66,7 @@ void wifi_init() {
 bool isDataReceived = false;
 
 void data_receive(AsyncWebServerRequest *request, unsigned char *data, size_t len, size_t index, size_t total) {
+    startTime = millis(); // Record the start time
     String stri;
     Serial.print("\n");
     for (int i = 0; i < len; i++) {
@@ -129,7 +133,11 @@ void stayLOW() {
 }
 
 void post_onem2m() {
-    String data = "[" + String(Act) + "," + String(rssi) + "]";
+    duration = millis() - startTime; // Calculate the duration
+    float durationSeconds = duration / 1000.0; // Convert milliseconds to seconds
+    String durationStr = String(durationSeconds, 3); // Format to 3 decimal places
+
+    String data = "[" + String(Act) + "," + String(rssi) + "," + durationStr + "]";
     String server = "http://" + String(CSE_IP) + ":" + String(CSE_PORT) + String(OM2M_MN);
 
     http.begin(client, server + OM2M_AE + "/" + OM2M_DATA_CONT);
