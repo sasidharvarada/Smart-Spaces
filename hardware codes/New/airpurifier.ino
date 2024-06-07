@@ -32,6 +32,9 @@ String Act = "NC";
 WiFiClient client;
 HTTPClient http;
 
+unsigned long startTime;
+unsigned long duration;
+
 // WiFi credentials
 const char *ssid = "esw-m19@iiith";
 const char *password = "e5W-eMai@3!20hOct";
@@ -62,19 +65,19 @@ void wifi_init() {
 bool isDataReceived = false;
 
 void data_receive(AsyncWebServerRequest *request, unsigned char *data, size_t len, size_t index, size_t total) {
+    startTime = millis(); // Record the start time
     String stri;
-    Serial.print("\n");
+    // Serial.print("\n");
     for (int i = 0; i < len; i++) {
         stri += (char)data[i];
     }
-    Serial.print(stri);
-    Serial.print("\n");
-
+    // Serial.println(stri);
+    // Serial.print("\n");
     DeserializationError error = deserializeJson(doc, stri);
 
     if (error) {
-        // Serial.print("deserializeJson() failed: ");
-        // Serial.println(error.c_str());
+        Serial.print("deserializeJson() failed: ");
+        Serial.println(error.c_str());
         return;
     }
 
@@ -82,9 +85,9 @@ void data_receive(AsyncWebServerRequest *request, unsigned char *data, size_t le
     const char *m2m_cin_con = m2m_cin["con"];
     String conv_data;
     conv_data = m2m_cin_con;
-    Serial.print("DATA: ");
-    Serial.println(conv_data);
-    Serial.println("======== oneM2M DATA PARSED! ==========");
+    // Serial.print("DATA: ");
+    // Serial.println(conv_data);
+    // Serial.println("======== oneM2M DATA PARSED! ==========");
 
     // Use if the data required needs to be in the format of char*
     char *c = const_cast<char *>(conv_data.c_str());
@@ -99,10 +102,10 @@ void data_receive(AsyncWebServerRequest *request, unsigned char *data, size_t le
     airpurifier = conValue.substring(commaIndex + 1); // Update global variable
 
     // Print the extracted values without square brackets
-    Serial.print("window: ");
-    Serial.println(window);
-    Serial.print("airpurifier: ");
-    Serial.println(airpurifier);
+    // Serial.print("window: ");
+    // Serial.println(window);
+    // Serial.print("airpurifier: ");
+    // Serial.println(airpurifier);
 
     if (!conv_data.isEmpty()) {
         isDataReceived = true;
@@ -121,7 +124,11 @@ void switchON() {
 }
 
 void post_onem2m() {
-    String data  = "[" + String(Act) + "," + String(rssi) +"]";
+    duration = millis() - startTime; // Calculate the duration
+    float durationSeconds = duration / 1000.0; // Convert milliseconds to seconds
+    String durationStr = String(durationSeconds, 3); // Format to 3 decimal places
+
+    String data = "[" + String(Act) + "," + String(rssi) + "," + durationStr + "]";
     String server = "http://" + String(CSE_IP) + ":" + String(CSE_PORT) + String(OM2M_MN);
 
     http.begin(client, server + OM2M_AE + "/" + OM2M_DATA_CONT);
@@ -133,7 +140,6 @@ void post_onem2m() {
                     + "\"cnf\": \"text\""
                     + "}}";  
 
-    Serial.println("Server URL: " + server);
     Serial.println("Request Data: " + req_data);
 
     int code = http.POST(req_data);
@@ -162,24 +168,26 @@ void loop() {
         WiFi.reconnect();
     }
     if (isDataReceived) {
+        // Serial.println("Window: " + window);
+        // Serial.println("Airpurifier: " + airpurifier);
         buttonState = digitalRead(button);
 
         if (flag == 0 && (buttonState == 1 || airpurifier == "ON")) {
             switchON();
             airpurifier = "NC";
-            Serial.println("Switching ON...");
+            // Serial.println("Switching ON...");
             flag = 1;
             Act = "ON";
             post_onem2m();
         } else if (flag == 1 && (buttonState == 1 || airpurifier == "OFF")) {
             switchOFF();
             airpurifier = "NC";
-            Serial.println("Switching OFF...");
+            // Serial.println("Switching OFF...");
             flag = 0;
             Act = "OFF";
             post_onem2m();
         } else {
-            Serial.println("No change detected!!");
+            // Serial.println("No change detected!!");
             post_onem2m();
         }
         isDataReceived = false;
