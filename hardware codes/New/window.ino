@@ -141,7 +141,7 @@ void post_onem2m() {
                     + "\"cnf\": \"text\""
                     + "}}";
 
-    Serial.println("Server URL: " + server);
+    // Serial.println("Server URL: " + server);
     Serial.println("Request Data: " + req_data);
 
     int code = http.POST(req_data);
@@ -179,8 +179,8 @@ void loop() {
     rssi = WiFi.RSSI(); // Update RSSI value
 
     if (isDataReceived) {
-        Serial.println("Window: " + window);
-        Serial.println("Airpurifier: " + airpurifier);
+        // Serial.println("Window: " + window);
+        // Serial.println("Airpurifier: " + airpurifier);
 
         buttonState = digitalRead(button);
 
@@ -191,8 +191,8 @@ void loop() {
             window = "NC";
             buttonState = 0;
             Act = "CLOSE";
-            post_onem2m();
             delay(3000);
+            post_onem2m();
             stayLOW();
         } 
         else if (flag == 1 && (buttonState == 1 || window == "OPEN")) {
@@ -202,9 +202,8 @@ void loop() {
             window = "NC";
             buttonState = 0;
             Act = "OPEN";
-            post_onem2m();
-            Act = "OPEN";
             delay(4500);
+            post_onem2m();
             stayLOW();
         }
         else {
