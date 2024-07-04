@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Spaces</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .cloud-shape {
+            width: 150px;
+            height: 60px;
+            background-color: #f0f0f0;
+            border-radius: 50px;
+            display: inline-block;
+            margin-right: 10px;
+            padding: 10px;
+            text-align: center;
+            line-height: 60px;
+        }
+        .input-container {
+            display: inline-block;
+            margin: 20px;
+        }
+        .dml-container, .actuation-container {
+            display: inline-block;
+            margin: 20px;
+        }
+        button {
+            margin: 10px;
+        }
+        .hidden {
+            visibility: hidden;
+        }
+        .line {
+            fill: none;
+            stroke: black;
+            stroke-width: 2;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+        }
+        .line.animate {
+            animation: drawLine 2s forwards;
+        }
+        .line.animate-2 {
+            animation: drawLine 2s 2s forwards; /* Start after the first line animation */
+        }
+        @keyframes drawLine {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        .arrow-tip {
+            fill: black;
+            visibility: hidden;
+        }
+        .arrow-tip.visible {
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+    <h1>Smart Spaces</h1>
+    <form id="aqiForm">
+        <div class="input-container">
+            <label for="value1">Indoor AQI:</label>
+            <input type="text" id="value1" name="value1" required>
+        </div>
+        <div class="input-container">
+            <label for="value2">Outdoor AQI:</label>
+            <input type="text" id="value2" name="value2" required>
+        </div>
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <br>
+
+    <div>
+        <div class="input-container">
+            <div class="cloud-shape">Indoor AQI</div>
+            <div class="cloud-shape">Outdoor AQI</div>
+            <svg height="60" width="100">
+                <defs>
+                    <marker id="arrowhead1" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" class="arrow-tip" id="arrow-tip1" />
+                    </marker>
+                </defs>
+                <line x1="0" y1="30" x2="100" y2="30" class="line hidden" id="line1" marker-end="url(#arrowhead1)" />
+            </svg>
+            
+        </div>
+      
+        <div class="dml-container">
+            <div class="cloud-shape">DML</div>
+        </div>
+        <svg height="60" width="100">
+            <defs>
+                <marker id="arrowhead3" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" class="arrow-tip" id="arrow-tip3" />
+                </marker>
+            </defs>
+            <line x1="0" y1="30" x2="100" y2="30" class="line hidden" id="line3" marker-end="url(#arrowhead3)" />
+        </svg>
+        <div class="dml-container">
+            <div class="cloud-shape">Actuation Generator</div>
+        </div>
+        <svg height="60" width="100">
+            <defs>
+                <marker id="arrowhead3" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" class="arrow-tip" id="arrow-tip3" />
+                </marker>
+            </defs>
+            <line x1="0" y1="30" x2="100" y2="30" class="line hidden" id="line3" marker-end="url(#arrowhead3)" />
+        </svg>
+        <div class="actuation-container">
+            <div id="statusContainer">
+                <div id="windowStatus">Window Status: <span id="windowValue">-</span></div>
+                <div id="airPurifierStatus">Air Purifier Status: <span id="airPurifierValue">-</span></div>
+            </div>
+            
+        </div>
+    </div>
+    <script>
+        document.getElementById('aqiForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            var line1 = document.getElementById('line1');
+            var line2 = document.getElementById('line2');
+            var line3 = document.getElementById('line3');
+            var arrowTip1 = document.getElementById('arrow-tip1');
+            var arrowTip2 = document.getElementById('arrow-tip2');
+            var arrowTip3 = document.getElementById('arrow-tip3');
+
+            // Start animations
+            line1.style.visibility = 'visible';
+            line1.classList.add('animate');
+
+            setTimeout(function() {
+                line2.style.visibility = 'visible';
+                line2.classList.add('animate-2');
+            }, 2000); // Delay for the second line animation
+
+            setTimeout(function() {
+                line3.style.visibility = 'visible';
+                line3.classList.add('animate-2');
+            }, 4000); // Delay for the third line animation
+
+            // Reveal arrow tips after line animations
+            setTimeout(function() {
+                arrowTip1.classList.add('visible');
+            }, 2000);
+
+            setTimeout(function() {
+                arrowTip2.classList.add('visible');
+            }, 4000);
+
+            setTimeout(function() {
+                arrowTip3.classList.add('visible');
+            }, 6000);
+
+            // Create AJAX request
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/submit', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    document.getElementById('windowValue').innerText = data.window_status;
+                    document.getElementById('airPurifierValue').innerText = data.air_purifier_status;
+                    console.log('Form submitted successfully');
+                } else {
+                    console.error('Error in form submission');
+                }
+            };
+            var formData = new FormData(document.getElementById('aqiForm'));
+            var params = new URLSearchParams(formData).toString();
+            xhr.send(params);
+        });
+    </script>
+</body>
+</html>
