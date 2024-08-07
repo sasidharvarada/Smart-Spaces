@@ -3,25 +3,14 @@
 #include <string.h>
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 #define PORT 8100
 #define BAUD 115200
 
-// #define CSE_IP "dev-onem2m.iiit.ac.in"
-// #define OM2M_ORGIN "Tue_20_12_22:Tue_20_12_22"
-// #define CSE_PORT 443
 #define HTTPS false
 #define OM2M_MN "/~/in-cse/in-name/"
-// #define OM2M_AE "AE-AQ"
-
-// #define OM2M_NODE_ID "AQ-SN00-00"
-// #define OM2M_DATA_CONT "AQ-SN00-00/ACK-AIRPURIFIER"
-// #define OM2M_DATA_LBL "[\"AE-AQ\", \"V4.0.0\", \"AQ-SN00-00\", \"AQ-V4.0.0\"]"
-
-
-// #define OM2M_NODE_ID_1 "AQ-MG00-00"
-// #define OM2M_DATA_CONT_1 "AQ-MG00-00/Data"
-// #define OM2M_DATA_LBL_1 "[\"AE-AQ\", \"V4.0.0\", \"AQ-MG00-00\", \"AQ-V4.0.0\"]"
 
 #define CSE_IP "10.3.1.224"
 #define OM2M_ORGIN "admin:admin"
@@ -29,13 +18,11 @@
 #define OM2M_AE "AE-TEST"
 #define OM2M_NODE_ID "ACK-airpurifier"
 #define OM2M_DATA_CONT "ACK-airpurifier/Data"
-#define OM2M_DATA_LBL"[\"AE-TEST\", \"V4.0.0\", \"ACK-airpurifier\", \"AQ-V4.0.0\"]"
-
+#define OM2M_DATA_LBL "[\"AE-TEST\", \"V4.0.0\", \"ACK-airpurifier\", \"AQ-V4.0.0\"]"
 
 #define OM2M_NODE_ID_1 "ACK-airpurifier"
 #define OM2M_DATA_CONT_1 "ACK-airpurifier/Latency"
-#define OM2M_DATA_LBL_1"[\"AE-TEST\", \"V4.0.0\", \"ACK-airpurifier\", \"AQ-V4.0.0\"]"
-
+#define OM2M_DATA_LBL_1 "[\"AE-TEST\", \"V4.0.0\", \"ACK-airpurifier\", \"AQ-V4.0.0\"]"
 
 String data;
 long rssi;
@@ -66,12 +53,12 @@ float step3_sec = 0;
 float step4_sec = 0;
 float time_send = 0;
 
+// New variable for subscription time
+String sub_time;
+
 // WiFi credentials
 const char *ssid = "esw-m19@iiith";
 const char *password = "e5W-eMai@3!20hOct";
-
-// const char *ssid = "Sasi_PC";
-// const char *password = "Internet";
 
 // Space required by the packages received
 StaticJsonDocument<512> doc;
@@ -79,11 +66,11 @@ StaticJsonDocument<512> doc;
 // Hosted on port 8100
 AsyncWebServer server(PORT);
 
-void action(char *data_input) {
-    const char *data_in = data_input;
-    // Add your function here!!!
-}
+// NTP client to get time
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", 19800); // Set your timezone offset here (in seconds)
 
+// Initialize WiFi
 void wifi_init() {
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
@@ -96,6 +83,21 @@ void wifi_init() {
     rssi = WiFi.RSSI();
 }
 
+// Get formatted time
+String getFormattedTime() {
+    time_t now = timeClient.getEpochTime();
+    struct tm *timeinfo = localtime(&now);
+
+    char timeString[16];
+    snprintf(timeString, sizeof(timeString), "%02d:%02d:%02d.%03d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, millis() % 1000);
+    return String(timeString);
+}
+
+void action(char *data_input) {
+    const char *data_in = data_input;
+    // Add your function here!!!
+}
+
 bool isDataReceived = false;
 
 void data_receive(AsyncWebServerRequest *request, unsigned char *data, size_t len, size_t index, size_t total) {
@@ -104,6 +106,9 @@ void data_receive(AsyncWebServerRequest *request, unsigned char *data, size_t le
     time_2 = 0;
     time_3 = 0;
     time_4 = 0;
+
+    // Save the subscription time
+    sub_time = getFormattedTime();
 
     startTime = millis(); // Record the start time
     time_1 = startTime;   // Save the timestamp for time_1
@@ -180,7 +185,7 @@ void post_onem2m() {
 void post_onem2msec() {
     int code = -1;
     while (code != 201) {
-        String data = "[" + String(step1_sec,3) + "," + String(step2_sec,3) + "," + String(step3_sec,3) + "," + String(step4_sec,3)+"]";
+        String data = "[" + String(sub_time) + "," + String(step1_sec, 3) + "," + String(step2_sec, 3) + "," + String(step3_sec, 3) + "," + String(step4_sec, 3) + "]";
         String server = "http://" + String(CSE_IP) + ":" + String(CSE_PORT) + String(OM2M_MN);
 
         http.begin(client, server + OM2M_AE + "/" + OM2M_DATA_CONT_1);
@@ -204,6 +209,8 @@ void post_onem2msec() {
 void setup() {
     Serial.begin(115200);
     wifi_init();
+    timeClient.begin();
+    timeClient.update(); // Get the initial time
     server.on(
         "/",
         HTTP_POST,
@@ -233,17 +240,22 @@ void printTimestamps() {
     step3_sec = (time_4 - time_3) / 1000.0;
     step4_sec = step1_sec + step2_sec + step3_sec;
 
+    // Print the subscription time
+    Serial.println("Subscription time: " + sub_time);
+
     // Serial.println("Time taken for each step:");
     // Serial.println("Step 1: " + String(step1_sec, 3) + " seconds");
     // Serial.println("Step 2: " + String(step2_sec, 3) + " seconds");
     // Serial.println("Step 3: " + String(step3_sec, 3) + " seconds");
     // Serial.println("Step 4 (sum of step1 + step2 + step3): " + String(step4_sec, 3) + " seconds");
+
 }
 
 void loop() {
     if (WiFi.status() != WL_CONNECTED) {
         WiFi.reconnect();
     }
+    timeClient.update(); // Update the NTP client regularly
     if (isDataReceived) {
         if (flag == 0 && airpurifier == "ON") {
             switchON();
