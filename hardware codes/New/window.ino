@@ -199,7 +199,7 @@ void loop() {
             window = "NC";
             buttonState = 0;
             Act = "CLOSE";
-            delay(3200);
+            delay(3800);
             post_onem2m();
             stayLOW();
         } 
