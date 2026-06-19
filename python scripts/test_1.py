@@ -24,3 +24,4 @@ def get_ack_airpurifier():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
