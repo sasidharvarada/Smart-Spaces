@@ -8,7 +8,7 @@ import requests
 CSE_IP = "dev-onem2m.iiit.ac.in"
 CSE_PORT = 443
 HTTPS = False
-OM2M_ORGIN = ":"
+OM2M_ORGIN = "pass:pass"
 OM2M_MN = "/~/in-cse/in-name/"
 OM2M_AE = "AE-AQ/AQ-SN00-00"
 OM2M_DATA_CONT = "AQ-SN00-00/Data"
