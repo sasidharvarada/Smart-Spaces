@@ -7,7 +7,7 @@ app = Flask(__name__)
 def get_ack_airpurifier():
     url = "http://dev-onem2m.iiit.ac.in:443/~/in-cse/in-name/AE-AQ/AQ-SN00-00/ACK-AIRPURIFIER/la"
     headers = {
-        'X-M2M-Origin': ':',
+        'X-M2M-Origin': 'pass:pass',
         'Content-Type': 'application/json;ty=4'
     }
 
