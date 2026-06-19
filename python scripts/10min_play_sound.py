@@ -27,3 +27,4 @@ while True:
         # Exit the script if the user presses Ctrl+C
         pygame.mixer.quit()
         break
+
