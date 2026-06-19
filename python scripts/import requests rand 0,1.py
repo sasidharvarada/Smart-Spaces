@@ -5,7 +5,7 @@ import random
 url = "http://dev-onem2m.iiit.ac.in:443/~/in-cse/in-name/AE-AQ/AQ-SN00-00/Data"
 
 headers = {
-    'X-M2M-Origin': ':',
+    'X-M2M-Origin': 'pass:pass',
     'Content-Type': 'application/json;ty=4'
 }
 
